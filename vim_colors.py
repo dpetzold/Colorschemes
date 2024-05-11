@@ -3,6 +3,7 @@ import typing
 
 from dataclasses import dataclass
 from rich.console import Console
+from rich.table import Table
 
 console = Console()
 
@@ -14,14 +15,15 @@ class Highlight:
     guibg: typing.Optional[str]
     gui: typing.Optional[str]
 
-    def print(self):
+    @property
+    def style(self):
         style = self.guifg
         if self.guibg and self.gui:
             style = f"{self.guifg} {self.gui.replace(',', ' ')} on {self.guibg}"
         elif self.guibg:
-            style = f"{self.guifg} {self.guibg}"
+            style = f"{self.guifg} on {self.guibg}"
 
-        console.print(self.name, style=style)
+        return style
 
 
 def parse_attr(attr):
@@ -49,12 +51,15 @@ def parse_hi(line):
 
 
 def parse_vim(file):
+    table = Table()
 
     for line in file.readlines():
         if line.startswith("hi"):
-            highlight = parse_hi(line)
-            if highlight:
-                highlight.print()
+            hi = parse_hi(line)
+            if hi:
+                table.add_row(f"[{hi.style}]{hi.name}[/{hi.style}]", hi.style)
+
+    console.print(table)
 
 
 def main():
